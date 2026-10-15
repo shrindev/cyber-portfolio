@@ -12,6 +12,8 @@ Nothing here needs an install or a download. Open a project and it runs in the b
 
 Portfolio home: [gitersg.github.io/cyber-portfolio](https://gitersg.github.io/cyber-portfolio/)
 
+The live links work after GitHub Pages is set to **GitHub Actions** once, in [Pages settings](https://github.com/Gitersg/cyber-portfolio/settings/pages). The publish workflow is already in this repo.
+
 Shadow Owl does not exploit, guess passwords, or touch private networks. Use it only on hosts you are allowed to test.
 
-`shadow-owl/` is the page. `assets/local-scout.js` is the scout that runs on your machine, in the browser. `api/scout.js` is an optional deeper check for headers and certificates when a server is attached later.
+`shadow-owl/` is the page. `assets/local-scout.js` is the scout that runs on your machine, in the browser.
