@@ -30,5 +30,162 @@
       <p class="note"><a id="back" href="https://htmlpreview.github.io/?https://github.com/shrindev/cyber-portfolio/blob/main/index.html">Back to the portfolio</a></p>
     </main>
     <script src="../assets/local-scout.js"></script>
+    <script>
+      (function () {
+        function boot() {
+          var go = document.querySelector("#go");
+          var device = document.querySelector("#device");
+          if (!go || !device || !window.ShadowOwl) {
+            setTimeout(boot, 40);
+            return;
+          }
+          if (go.getAttribute("data-ready") === "1") return;
+          go.setAttribute("data-ready", "1");
+          go.addEventListener("click", runHost);
+          device.addEventListener("click", runDevice);
+        }
+
+        async function runHost() {
+          var allowed = document.querySelector("#allowed");
+          var status = document.querySelector("#status");
+          var error = document.querySelector("#error");
+          var report = document.querySelector("#report");
+          var host = document.querySelector("#host").value;
+          error.textContent = "";
+          report.innerHTML = "";
+          if (!allowed.checked) {
+            error.textContent = "Confirm you are allowed to assess this host.";
+            return;
+          }
+          status.textContent = "Scouting from this browser…";
+          try {
+            var data = await scoutHost(host);
+            status.textContent = "";
+            paint(data);
+          } catch (reason) {
+            status.textContent = "";
+            error.textContent = reason.message || "The scout could not finish.";
+          }
+        }
+
+        async function runDevice() {
+          var status = document.querySelector("#status");
+          var error = document.querySelector("#error");
+          var report = document.querySelector("#report");
+          error.textContent = "";
+          report.innerHTML = "";
+          status.textContent = "Reading this browser only…";
+          var data = await ShadowOwl.scoutBrowser();
+          status.textContent = "";
+          paint(data);
+        }
+
+        async function scoutHost(host) {
+          var deep = await deepScout(host);
+          if (deep) return deep;
+          return ShadowOwl.scout(host);
+        }
+
+        async function deepScout(host) {
+          if (location.protocol === "file:") return null;
+          if (location.hostname.endsWith("github.io")) return null;
+          var response;
+          try {
+            response = await fetch(new URL("../api/scout", location.href), {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ host: host }),
+            });
+          } catch (err) {
+            return null;
+          }
+          if (response.status === 404 || response.status === 405) return null;
+          var data = await response.json().catch(function () { return {}; });
+          if (!response.ok) throw new Error(data.error || "Scout failed");
+          data.mode = "deep";
+          return data;
+        }
+
+        function paint(data) {
+          var report = document.querySelector("#report");
+          var findings = data.findings || [];
+          lastText = reportText(data);
+          report.innerHTML =
+            '<article class="panel">' +
+            '<p class="score">' + escapeHtml(data.score) + " · " + escapeHtml(data.posture || "") + "</p>" +
+            "<h2>" + escapeHtml(data.target) + "</h2>" +
+            "<p>" + escapeHtml(data.summary) + "</p>" +
+            findings.map(function (item) {
+              return '<div class="finding"><span class="sev ' + escapeHtml(item.severity) + '">' + label(item.severity) + "</span> " +
+                escapeHtml(item.title) +
+                '<p class="lead">' + escapeHtml(item.evidence || "") + "</p>" +
+                '<p class="lead">' + escapeHtml((item.fix && item.fix[0]) || "") + "</p></div>";
+            }).join("") +
+            (data.passes || []).map(function (pass) {
+              return '<p class="low">' + escapeHtml(pass) + "</p>";
+            }).join("") +
+            '<p class="row"><button class="ghost" type="button" id="copy">Copy report</button></p>' +
+            "</article>";
+          var copy = document.querySelector("#copy");
+          if (copy) copy.addEventListener("click", copyReport);
+        }
+
+        var lastText = "";
+
+        function reportText(data) {
+          var lines = [
+            "Shadow Owl",
+            "Target: " + (data.target || ""),
+            "Score: " + (data.score == null ? "" : data.score) + " " + (data.posture || ""),
+            data.summary || "",
+            "",
+          ];
+          (data.findings || []).forEach(function (item) {
+            lines.push(label(item.severity) + " — " + item.title);
+            if (item.evidence) lines.push(item.evidence);
+            if (item.fix && item.fix[0]) lines.push(item.fix[0]);
+            lines.push("");
+          });
+          (data.passes || []).forEach(function (pass) { lines.push(pass); });
+          return lines.join("\n").trim() + "\n";
+        }
+
+        async function copyReport() {
+          var status = document.querySelector("#status");
+          var error = document.querySelector("#error");
+          error.textContent = "";
+          try {
+            await navigator.clipboard.writeText(lastText);
+            status.textContent = "Report copied.";
+          } catch (err) {
+            var area = document.createElement("textarea");
+            area.value = lastText;
+            document.body.appendChild(area);
+            area.select();
+            var ok = false;
+            try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+            area.remove();
+            status.textContent = ok ? "Report copied." : "Could not copy. Select the report and copy it.";
+          }
+        }
+
+        function label(severity) {
+          if (severity === "extreme") return "Extreme";
+          if (severity === "mild") return "Mild";
+          return "Low";
+        }
+
+        function escapeHtml(value) {
+          return String(value)
+            .replace(/&/g, "\u0026amp;")
+            .replace(/</g, "\u0026lt;")
+            .replace(/>/g, "\u0026gt;")
+            .replace(/"/g, "\u0026quot;")
+            .replace(/'/g, "\u0026#39;");
+        }
+
+        boot();
+      })();
+    </script>
   </body>
 </html>
