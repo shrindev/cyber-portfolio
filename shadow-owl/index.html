@@ -109,6 +109,7 @@
         function paint(data) {
           var report = document.querySelector("#report");
           var findings = data.findings || [];
+          lastText = reportText(data);
           report.innerHTML =
             '<article class="panel">' +
             '<p class="score">' + escapeHtml(data.score) + " · " + escapeHtml(data.posture || "") + "</p>" +
@@ -123,7 +124,49 @@
             (data.passes || []).map(function (pass) {
               return '<p class="low">' + escapeHtml(pass) + "</p>";
             }).join("") +
+            '<p class="row"><button class="ghost" type="button" id="copy">Copy report</button></p>' +
             "</article>";
+          var copy = document.querySelector("#copy");
+          if (copy) copy.addEventListener("click", copyReport);
+        }
+
+        var lastText = "";
+
+        function reportText(data) {
+          var lines = [
+            "Shadow Owl",
+            "Target: " + (data.target || ""),
+            "Score: " + (data.score == null ? "" : data.score) + " " + (data.posture || ""),
+            data.summary || "",
+            "",
+          ];
+          (data.findings || []).forEach(function (item) {
+            lines.push(label(item.severity) + " — " + item.title);
+            if (item.evidence) lines.push(item.evidence);
+            if (item.fix && item.fix[0]) lines.push(item.fix[0]);
+            lines.push("");
+          });
+          (data.passes || []).forEach(function (pass) { lines.push(pass); });
+          return lines.join("\n").trim() + "\n";
+        }
+
+        async function copyReport() {
+          var status = document.querySelector("#status");
+          var error = document.querySelector("#error");
+          error.textContent = "";
+          try {
+            await navigator.clipboard.writeText(lastText);
+            status.textContent = "Report copied.";
+          } catch (err) {
+            var area = document.createElement("textarea");
+            area.value = lastText;
+            document.body.appendChild(area);
+            area.select();
+            var ok = false;
+            try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+            area.remove();
+            status.textContent = ok ? "Report copied." : "Could not copy. Select the report and copy it.";
+          }
         }
 
         function label(severity) {

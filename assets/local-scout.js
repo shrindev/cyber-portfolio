@@ -297,17 +297,17 @@
     ["Facebook", "facebook", ["facebook.com", "fb.com"]],
     ["Instagram", "instagram", ["instagram.com"]],
     ["WhatsApp", "whatsapp", ["whatsapp.com"]],
-    ["Google", "google", ["google.com"]],
+    ["Google", "google", ["google.com", "google.co.in", "googleusercontent.com", "gstatic.com", "googleapis.com", "googlevideo.com", "withgoogle.com"]],
     ["YouTube", "youtube", ["youtube.com", "youtu.be"]],
-    ["Microsoft", "microsoft", ["microsoft.com", "live.com", "outlook.com", "office.com"]],
+    ["Microsoft", "microsoft", ["microsoft.com", "live.com", "outlook.com", "office.com", "office365.com", "microsoftonline.com", "windows.com", "azure.com"]],
     ["Apple", "apple", ["apple.com", "icloud.com"]],
-    ["Amazon", "amazon", ["amazon.com", "amazon.in"]],
+    ["Amazon", "amazon", ["amazon.com", "amazon.in", "amazonaws.com", "media-amazon.com"]],
     ["PayPal", "paypal", ["paypal.com"]],
     ["Netflix", "netflix", ["netflix.com"]],
     ["LinkedIn", "linkedin", ["linkedin.com"]],
     ["Adobe", "adobe", ["adobe.com"]],
     ["Dropbox", "dropbox", ["dropbox.com"]],
-    ["GitHub", "github", ["github.com"]],
+    ["GitHub", "github", ["github.com", "github.io", "githubusercontent.com", "githubassets.com", "github.dev"]],
     ["Steam", "steampowered", ["steampowered.com"]],
     ["Binance", "binance", ["binance.com"]],
     ["Coinbase", "coinbase", ["coinbase.com"]],
@@ -336,12 +336,12 @@
       ));
       return;
     }
-    const owned = BRANDS.find((brand) => isOfficial(host, brand[2]));
+    const owned = ownedBrand(host);
     if (owned) passes.push("This name is the real " + owned[0] + " domain, not a lookalike.");
   }
 
   function lookalike(host) {
-    if (BRANDS.some((brand) => isOfficial(host, brand[2]))) return null;
+    if (ownedBrand(host)) return null;
     const labels = host.split(".");
     const stem = registrableLabel(host);
     const folded = labels.map(skeleton);
@@ -365,6 +365,11 @@
       }
     }
     return null;
+  }
+
+  function ownedBrand(host) {
+    const last = host.split(".").pop();
+    return BRANDS.find((brand) => last === brand[1] || isOfficial(host, brand[2])) || null;
   }
 
   function isOfficial(host, domains) {
