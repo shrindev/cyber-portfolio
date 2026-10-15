@@ -11,7 +11,7 @@
       <p class="mark">SHADOW OWL · 01</p>
       <h1>Network posture scout</h1>
       <p class="lead">Open this page and scout. It runs here, in the browser. Nothing to install and nothing to download. Public hosts you are allowed to test only.</p>
-      <form class="panel" id="form">
+      <form class="panel" id="form" action="#" method="post">
         <label>Public host or URL
           <input id="host" type="text" value="example.com" autocomplete="off" spellcheck="false" />
         </label>
@@ -20,110 +20,129 @@
           <span>I am allowed to assess this host. This scout does not exploit, guess passwords, or touch private addresses.</span>
         </label>
         <div class="row">
-          <button class="go" type="submit">Scout host</button>
+          <button class="go" id="go" type="button">Scout host</button>
           <button class="ghost" type="button" id="device">Scout this browser</button>
         </div>
         <p id="status" class="lead"></p>
         <p id="error" class="err"></p>
       </form>
       <section id="report"></section>
-      <p class="note"><a href="../">Back to the portfolio</a></p>
+      <p class="note"><a id="back" href="https://htmlpreview.github.io/?https://github.com/Gitersg/cyber-portfolio/blob/main/index.html">Back to the portfolio</a></p>
     </main>
     <script src="../assets/local-scout.js"></script>
     <script>
-      const form = document.querySelector("#form");
-      const hostInput = document.querySelector("#host");
-      const allowed = document.querySelector("#allowed");
-      const status = document.querySelector("#status");
-      const error = document.querySelector("#error");
-      const report = document.querySelector("#report");
-
-      form.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        error.textContent = "";
-        report.innerHTML = "";
-        if (!allowed.checked) {
-          error.textContent = "Confirm you are allowed to assess this host.";
-          return;
+      (function () {
+        function boot() {
+          var go = document.querySelector("#go");
+          var device = document.querySelector("#device");
+          if (!go || !device || !window.ShadowOwl) {
+            setTimeout(boot, 40);
+            return;
+          }
+          if (go.getAttribute("data-ready") === "1") return;
+          go.setAttribute("data-ready", "1");
+          go.addEventListener("click", runHost);
+          device.addEventListener("click", runDevice);
         }
-        status.textContent = "Scouting from this browser…";
-        try {
-          const data = await scoutHost(hostInput.value);
+
+        async function runHost() {
+          var allowed = document.querySelector("#allowed");
+          var status = document.querySelector("#status");
+          var error = document.querySelector("#error");
+          var report = document.querySelector("#report");
+          var host = document.querySelector("#host").value;
+          error.textContent = "";
+          report.innerHTML = "";
+          if (!allowed.checked) {
+            error.textContent = "Confirm you are allowed to assess this host.";
+            return;
+          }
+          status.textContent = "Scouting from this browser…";
+          try {
+            var data = await scoutHost(host);
+            status.textContent = "";
+            paint(data);
+          } catch (reason) {
+            status.textContent = "";
+            error.textContent = reason.message || "The scout could not finish.";
+          }
+        }
+
+        async function runDevice() {
+          var status = document.querySelector("#status");
+          var error = document.querySelector("#error");
+          var report = document.querySelector("#report");
+          error.textContent = "";
+          report.innerHTML = "";
+          status.textContent = "Reading this browser only…";
+          var data = await ShadowOwl.scoutBrowser();
           status.textContent = "";
           paint(data);
-        } catch (reason) {
-          status.textContent = "";
-          error.textContent = reason.message || "The scout could not finish.";
         }
-      });
 
-      document.querySelector("#device").addEventListener("click", async () => {
-        error.textContent = "";
-        report.innerHTML = "";
-        status.textContent = "Reading this browser only…";
-        const data = await ShadowOwl.scoutBrowser();
-        status.textContent = "";
-        paint(data);
-      });
-
-      async function scoutHost(host) {
-        const deep = await deepScout(host);
-        if (deep) return deep;
-        return ShadowOwl.scout(host);
-      }
-
-      async function deepScout(host) {
-        if (location.protocol === "file:") return null;
-        if (location.hostname.endsWith("github.io")) return null;
-        let response;
-        try {
-          response = await fetch(new URL("../api/scout", location.href), {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ host }),
-          });
-        } catch {
-          return null;
+        async function scoutHost(host) {
+          var deep = await deepScout(host);
+          if (deep) return deep;
+          return ShadowOwl.scout(host);
         }
-        if (response.status === 404 || response.status === 405) return null;
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || "Scout failed");
-        data.mode = "deep";
-        return data;
-      }
 
-      function paint(data) {
-        const findings = data.findings || [];
-        report.innerHTML =
-          '<article class="panel">' +
-          '<p class="score">' + escapeHtml(data.score) + " · " + escapeHtml(data.posture || "") + "</p>" +
-          "<h2>" + escapeHtml(data.target) + "</h2>" +
-          "<p>" + escapeHtml(data.summary) + "</p>" +
-          findings.map((item) =>
-            '<div class="finding"><span class="sev ' + escapeHtml(item.severity) + '">' + label(item.severity) + "</span> " +
-            escapeHtml(item.title) +
-            '<p class="lead">' + escapeHtml(item.evidence || "") + "</p>" +
-            '<p class="lead">' + escapeHtml((item.fix && item.fix[0]) || "") + "</p></div>"
-          ).join("") +
-          (data.passes || []).map((pass) => '<p class="low">' + escapeHtml(pass) + "</p>").join("") +
-          "</article>";
-      }
+        async function deepScout(host) {
+          if (location.protocol === "file:") return null;
+          if (location.hostname.endsWith("github.io")) return null;
+          var response;
+          try {
+            response = await fetch(new URL("../api/scout", location.href), {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ host: host }),
+            });
+          } catch (err) {
+            return null;
+          }
+          if (response.status === 404 || response.status === 405) return null;
+          var data = await response.json().catch(function () { return {}; });
+          if (!response.ok) throw new Error(data.error || "Scout failed");
+          data.mode = "deep";
+          return data;
+        }
 
-      function label(severity) {
-        if (severity === "extreme") return "Extreme";
-        if (severity === "mild") return "Mild";
-        return "Low";
-      }
+        function paint(data) {
+          var report = document.querySelector("#report");
+          var findings = data.findings || [];
+          report.innerHTML =
+            '<article class="panel">' +
+            '<p class="score">' + escapeHtml(data.score) + " · " + escapeHtml(data.posture || "") + "</p>" +
+            "<h2>" + escapeHtml(data.target) + "</h2>" +
+            "<p>" + escapeHtml(data.summary) + "</p>" +
+            findings.map(function (item) {
+              return '<div class="finding"><span class="sev ' + escapeHtml(item.severity) + '">' + label(item.severity) + "</span> " +
+                escapeHtml(item.title) +
+                '<p class="lead">' + escapeHtml(item.evidence || "") + "</p>" +
+                '<p class="lead">' + escapeHtml((item.fix && item.fix[0]) || "") + "</p></div>";
+            }).join("") +
+            (data.passes || []).map(function (pass) {
+              return '<p class="low">' + escapeHtml(pass) + "</p>";
+            }).join("") +
+            "</article>";
+        }
 
-      function escapeHtml(value) {
-        return String(value).replace(/[&<>"']/g, (ch) => ({
-          "&": "&",
-          "<": "<",
-          ">": ">",
-          '"': """,
-          "'": "&#39;",
-        }[ch]));
-      }
+        function label(severity) {
+          if (severity === "extreme") return "Extreme";
+          if (severity === "mild") return "Mild";
+          return "Low";
+        }
+
+        function escapeHtml(value) {
+          return String(value)
+            .replace(/&/g, "\u0026amp;")
+            .replace(/</g, "\u0026lt;")
+            .replace(/>/g, "\u0026gt;")
+            .replace(/"/g, "\u0026quot;")
+            .replace(/'/g, "\u0026#39;");
+        }
+
+        boot();
+      })();
     </script>
   </body>
 </html>
