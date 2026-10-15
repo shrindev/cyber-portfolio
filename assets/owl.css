@@ -1,0 +1,51 @@
+:root {
+  color-scheme: dark;
+  --bg: #0c0f0c;
+  --surface: #151a16;
+  --line: #2c362f;
+  --fg: #e7e4d8;
+  --muted: #9aa394;
+  --gold: #d7a441;
+  --ink: #1a1408;
+  --extreme: #d35b45;
+  --low: #7ea184;
+  font-family: "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); line-height: 1.5; }
+button, a { cursor: pointer; }
+.wrap { max-width: 720px; margin: 0 auto; padding: 48px 20px 80px; }
+.mark { letter-spacing: 0.16em; color: var(--gold); font-size: 12px; }
+h1 { font-size: 40px; line-height: 1.1; margin: 8px 0 12px; }
+.lead, .note { color: var(--muted); }
+.card, .panel {
+  display: flex; flex-direction: column; gap: 8px;
+  margin-top: 28px; padding: 20px; border: 1px solid var(--line);
+  border-radius: 16px; background: var(--surface); color: inherit; text-decoration: none;
+}
+.kicker { color: var(--gold); font-size: 12px; letter-spacing: 0.08em; }
+.card strong { font-size: 28px; }
+label { display: flex; flex-direction: column; gap: 8px; color: var(--muted); font-size: 14px; }
+input[type="text"] {
+  height: 48px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--fg); padding: 0 14px; font: inherit;
+}
+.check { flex-direction: row; align-items: flex-start; color: var(--fg); }
+.check input { margin-top: 4px; width: 18px; height: 18px; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+button, .ghost {
+  height: 48px; border-radius: 10px; border: 0; padding: 0 16px; font: inherit;
+}
+.go { background: var(--gold); color: var(--ink); font-weight: 600; }
+.ghost { border: 1px solid var(--line); background: transparent; color: var(--fg); }
+.err { color: var(--extreme); }
+.score { font-size: 42px; color: var(--gold); margin: 0; }
+.finding { border-top: 1px solid var(--line); padding: 12px 0; }
+.extreme { color: var(--extreme); }
+.mild { color: var(--gold); }
+.low { color: var(--low); }
+.sev { width: 72px; display: inline-block; font-size: 12px; }
+@media (max-width: 640px) {
+  h1 { font-size: 32px; }
+  .wrap { padding-top: 28px; }
+}
