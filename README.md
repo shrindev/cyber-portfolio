@@ -8,7 +8,7 @@ Nothing here needs an install or a download. Open a project and it runs in the b
 
 | | Project | What it does | Open |
 |---|---|---|---|
-| 01 | **Shadow Owl** | Defensive network scout. Runs in your browser. Rates a public host Extreme, Mild, or Low and writes the fix. | [Open Shadow Owl](https://htmlpreview.github.io/?https://github.com/Gitersg/cyber-portfolio/blob/81b1897/shadow-owl/index.html) |
+| 01 | **Shadow Owl** | Defensive network scout. Runs in your browser. Rates a public host Extreme, Mild, or Low, and flags names that imitate a known brand. | [Open Shadow Owl](https://htmlpreview.github.io/?https://github.com/Gitersg/cyber-portfolio/blob/8d18042891c62428bc2627ab4c726a2fb9298e5a/shadow-owl/index.html) |
 
 Portfolio home: [open the portfolio](https://htmlpreview.github.io/?https://github.com/Gitersg/cyber-portfolio/blob/main/index.html)
 
